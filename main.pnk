@@ -1,0 +1,30 @@
+# Comentário de linha
+
+<# 
+   Comentário em bloco
+   que pode ocupar
+   várias linhas
+#/>
+
+int main() {
+    float pi := 3.14;
+    int contador := 0;
+    char letra := 'a';
+    string msg := "Hello World";
+    bool ativo := true;
+
+    if (contador < 10 and ativo) {
+        write msg;
+        contador += 1;
+    } else {
+        read contador;
+    }
+
+    for (i := 0; i < 5; i += 1) {
+        while (i != 3) {
+            i := i + 1;
+        }
+    }
+
+    return 0;
+}
