@@ -28,14 +28,18 @@
 %x COMMENT
 
 /* Definições */
-NUM     [0-9]+
-LETRA   [A-Za-z_]+
-SIMB    [-+*/=]
-IGNORE  [ \n\t\r]
+NUMBER      [0-9]+\.?[0-9]*
+VARIABLE    [A-Za-z_]+
+TEXT        \".*\"
+IGNORE      [ \n\t\r]
 
 %%
 {IGNORE}+   { }
 \n          { line++; }
+
+    /* Tags de Início e Fim */
+"INIT"      { return INIT; }
+"END"       { return END; } 
 
     /* A) Comentários */
 #.*             { /* comentário de linha */ }
@@ -58,23 +62,23 @@ IGNORE  [ \n\t\r]
 
     /* - Operadores para atribuições */
 
-":="        { printf("OPERADOR_ATRIBUICAO:              %s\n", yytext); }
-"+="        { printf("OPERADOR_ATRIBUICAO:              %s\n", yytext); }
-"-="        { printf("OPERADOR_ATRIBUICAO:              %s\n", yytext); }
+":="        { return EQUAL; }
+"+="        { return INCREMENT; }
+"-="        { return DECREMENT; }
 
     /* - Operadores aritméticos */
 
-"+"         { printf("OPERADOR_ARITMETICO:              %s\n", yytext); }
-"*"         { printf("OPERADOR_ARITMETICO:              %s\n", yytext); }
-"-"         { printf("OPERADOR_ARITMETICO:              %s\n", yytext); }
-"/"         { printf("OPERADOR_ARITMETICO:              %s\n", yytext); }
+"+"         { return '+'; }
+"*"         { return '*'; }
+"-"         { return '-'; }
+"/"         { return '/'; }
 
     /* D) Operação de leitura */
 
-"read"      { printf("OPERADOR_INPUT:                   %s\n", yytext);}
+"scan"      { return SCAN;}
 
     /* E) Operação de escrita */
-"write"     { printf("OPERADOR_OUTPUT:                  %s\n", yytext);}
+"print"     { return PRINT;}
 
     /* F) Operações de condição */
 "if"        { printf("PALAVRA_RESERVADA_CONDICIONAL:    %s\n", yytext); }
@@ -88,16 +92,16 @@ IGNORE  [ \n\t\r]
 "do"        { printf("PALAVRA_RESERVADA_REPETIÇÃO:      %s\n", yytext); }
 
     /* H) Delimitadores */
-"("         { printf("DELIMITADOR:                      %s\n", yytext); }
-")"         { printf("DELIMITADOR:                      %s\n", yytext); }
-"{"         { printf("DELIMITADOR:                      %s\n", yytext); }
-"}"         { printf("DELIMITADOR:                      %s\n", yytext); }
-"["         { printf("DELIMITADOR:                      %s\n", yytext); }
-"]"         { printf("DELIMITADOR:                      %s\n", yytext); }
+"("         { return '('; }
+")"         { return ')'; }
+"{"         { return '{'; }
+"}"         { return '}'; }
+"["         { return '['; }
+"]"         { return ']'; }
 
     /* I) Palavras reservadas */
 "return"    { printf("RETURN:                           %s\n", yytext); }
-"int"       { printf("TIPO_INT:                         %s\n", yytext); }
+"int"       { return TYPE_INT; }
 "float"     { printf("TIPO_FLOAT:                       %s\n", yytext); }
 "char"      { printf("TIPO_CHAR:                        %s\n", yytext); }
 "string"    { printf("TIPO_STRING:                      %s\n", yytext); }
@@ -106,52 +110,26 @@ IGNORE  [ \n\t\r]
 "false"     { printf("FALSE_BOOLEAN:                    %s\n", yytext); }
 
     /* J) Caracteres especiais */
-","         { printf("CARACTERE_ESPECIAL:               %s\n", yytext); }
-";"         { printf("CARACTERE_ESPECIAL:               %s\n", yytext); }
+","         { return ','; }
+";"         { return ';'; }
 "\""        { printf("CARACTERE_ESPECIAL:               %s\n", yytext); }
 "'"         { printf("CARACTERE_ESPECIAL:               %s\n", yytext); }
 
     /* B) Identificadores */
-{LETRA}({LETRA}|{NUM})*  { printf("ID:                               %s\n", yytext); }
-{NUM}+\.{NUM}           { printf("PONTO_FLUTUANTE:                  %s\n", yytext); }
-{NUM}+                  { printf("INTEIRO:                          %s\n", yytext);}
-
-\"([^"\n])*\"   {
-    char* stringSemAspas=remover_aspas(yytext);
-    printf("STRING:                           %s\n", stringSemAspas); 
-    free(stringSemAspas);
-}
-
-'([^'\n])'      { 
-    char* stringSemAspas=remover_aspas(yytext);
-    printf("CHAR:                             %s\n", stringSemAspas); 
-    free(stringSemAspas);
-}
-
+{VARIABLE}({VARIABLE}|{NUMBER})* {
+                                    yylval.integer = *yytext - 'a';
+                                    return VARIABLE;
+                                 }
+{NUMBER}                         {
+                                    yylval.real = atof(yytext);
+                                    return NUMBER;
+                                 }
+{TEXT}                           {
+                                    strcpy(yylval.string, yytext);
+                                    return TEXT;
+                                 }
 
     /* Erro Léxico */
 .           { printf("ERRO: Caractere nao reconhecido '%s' na linha %d\n", yytext, line); }
 %%
 
-int main(int argc, char *argv[]){
-    FILE *arquivo;
-    if (argc > 1) {
-        arquivo = fopen(argv[1], "r");
-        if (!arquivo) {
-            printf("Erro ao abrir o arquivo %s\n", argv[1]);
-            return 1;
-        }
-        yyin = arquivo;
-        printf("=== Analise Lexica do arquivo: %s ===\n\n", argv[1]);
-    } else {
-        printf("=== Analise Lexica (entrada padrao) ===\n");
-        printf("Digite o codigo (Ctrl+D para finalizar):\n\n");
-    }
-
-    yylex();
-
-    if (argc > 1) fclose(arquivo);
-
-    printf("\n=== Analise Lexica Concluida ===\n");
-    return 0;
-}
