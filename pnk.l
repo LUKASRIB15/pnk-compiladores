@@ -6,23 +6,6 @@
 
   int line = 1;
 
-  char* remover_aspas(char* s){
-      
-    int tam=strlen(s);
-
-    if(tam<2){
-        char *scopy = malloc(1);
-        if (scopy) scopy[0]='\0';
-        return scopy;
-    }
-
-    char *scopy = malloc(tam-1);
-
-    strncpy(scopy, s+1, tam-2);
-    scopy[tam-2] = '\0';
-
-    return scopy;
-  }
 %}
 
 %x COMMENT
@@ -30,16 +13,14 @@
 /* Definições */
 NUMBER      [0-9]+\.?[0-9]*
 VARIABLE    [A-Za-z_]+
-TEXT        \".*\"
-IGNORE      [ \n\t\r]
+TEXT        \".*\"  
+IGNORE      [ \t\r]
 
 %%
 {IGNORE}+   { }
 \n          { line++; }
 
     /* Tags de Início e Fim */
-"INIT"      { return INIT; }
-"END"       { return END; } 
 
     /* A) Comentários */
 #.*             { /* comentário de linha */ }
@@ -47,6 +28,8 @@ IGNORE      [ \n\t\r]
 <COMMENT>"#/>"  { BEGIN(INITIAL); } 
 <COMMENT>\n     { line++; }
 <COMMENT>.      { /* ignora dentro do comentário */ }
+
+"main" { return MAIN_FUNCTION;}
 
     /* C) Operadores */
     /* - Operadores Lógicos */
@@ -128,7 +111,6 @@ IGNORE      [ \n\t\r]
                                     strcpy(yylval.string, yytext);
                                     return TEXT;
                                  }
-
     /* Erro Léxico */
 .           { printf("ERRO: Caractere nao reconhecido '%s' na linha %d\n", yytext, line); }
 %%

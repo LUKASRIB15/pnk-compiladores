@@ -1,10 +1,10 @@
 %{
   #include<stdio.h>
-  int variables[26];
+  float variables[26];
 
   int yylex();
   void yyerror (char *s){
-    printf ("ERROR: %s\n",s);
+    printf ("SYNTAX ERROR: %s\n",s);
   }
 %}
 
@@ -14,7 +14,7 @@
   float real;
 }
 
-%token INIT END;
+%token MAIN_FUNCTION;
 %token SCAN PRINT;
 %token TYPE_INT;
 %token <real> NUMBER;
@@ -30,7 +30,7 @@
 
 %%
 
-program: INIT start END;
+program: TYPE_INT MAIN_FUNCTION '(' ')' '{' start '}';
 
 start: commands_list start | commands_list ;
 
@@ -43,23 +43,27 @@ commands_list:
   | TYPE_INT VARIABLE INCREMENT NUMBER ';' { variables[$2] += $4; } // int a += 2;
   | TYPE_INT VARIABLE DECREMENT NUMBER ';' { variables[$2] -= $4; } // int a -= 3;
 
-  | PRINT '(' options ')' ';' // print(<options>);
-  | SCAN '(' VARIABLE ')' ';' { scanf("%d", &variables[$3]); } // scan(variable);
+  | PRINT '(' print_options ')' ';' // print(<print_options>);
+  | SCAN '(' scan_options ')' ';'  // scan(<scan_options>);
   ;
 
-options:
-    options ',' EXPRESSION { printf("%.2f\n", $3); } 
-  | EXPRESSION             { printf("%.2f\n", $1); }
-  | options ',' TEXT       { printf("%s\n", $3); }
+print_options:
+    print_options ',' EXPRESSION { printf("%.2f\n", $3); } 
+  | EXPRESSION             { printf("%.2f\n", $1); } 
+  | print_options ',' TEXT       { printf("%s\n", $3); } 
   | TEXT                   { printf("%s\n", $1); }
   ;
+
+scan_options:
+    VARIABLE { scanf("%f", &variables[$1]); }
+  | scan_options ',' VARIABLE { scanf("%f", &variables[$3]); }
 
 new_variables:
     VARIABLE               
   | new_variables ',' VARIABLE
   ;
 
-EXPRESSION: EXPRESSION '+' EXPRESSION {$$ = $1 + $3;}
+EXPRESSION: EXPRESSION '+' EXPRESSION {$$ = $1 + $3;} 
           | EXPRESSION '*' EXPRESSION {$$ = $1 * $3;}
           | EXPRESSION '-' EXPRESSION {$$ = $1 - $3;}
           | EXPRESSION '/' EXPRESSION {$$ = $1 / $3;}

@@ -1,25 +1,13 @@
-INIT 
+int main() {
+  int a, b;
 
-int a, b;
+  print("PROGRAMA PARA REALIZAR CÁLCULO DA MÉDIA DE UM ALUNO");
 
-int b := 3;
-a := 2;
-a -= 2;
+  print("DIGITE DUAS NOTAS");
+  scan(a, b);
 
-a := b * 2.5 + c * 3.7;
+  int media := (a + b) / 2;
 
-#. scan(a);
-scan(a);
-
-<#
-
-print(1 * 2.5 + 2 * 3.0);
-print(3, 3+3);
-print("Digite a primeira nota");
-
-#/>
-
-
-print(34 + 3);
-
-END
+  print("A MÉDIA DO ALUNO É");
+  print(media);
+}
